@@ -3,17 +3,15 @@ import constants,utils
 
 NA_DICT={}
 EU_DICT={}
+
 def buildRedditTable(column_labels, grid):
+    #Taken from LOLFantasy bot to biuld table
     table = ""
-
     max_width = max([len(array) for array in grid])
-
     if len(column_labels) > max_width:
         max_width = len(column_labels)
-
     table += ("|" + (" {} |" * max_width) + "\n").format(*column_labels)
     table += "|" + (":-|" * max_width) + "\n"
-
     for array in grid:
         table += "|"
         for label in column_labels:
@@ -23,11 +21,11 @@ def buildRedditTable(column_labels, grid):
 
         table = table.format(*array)
         table += "\n"
-
     return table
 
 
 def generateTable(playHistory,fd):
+    #generateTable for vs teams
     playerDict={}
     table=[]
     playerArray=[]
@@ -80,18 +78,13 @@ def generateTable(playHistory,fd):
                 playerDict[name]['quads']=playerDict[name]['quads']+quads
                 playerDict[name]['pents']=playerDict[name]['pents']+pents
                 playerDict[name]['bonus']=playerDict[name]['bonus']+bonus
-                for t in teamNames:
-                    if t in playerDict[name]['team']:
-                        playerDict[name]['team']=t
-                    
+
     i=0
     for player in playerArray:
         pD=playerDict[player]
         ppg=int(pD['points'])/len(playHistory)
-       
         table.append([pD['profile'], "%s" % pD['points'],len(playHistory),ppg, pD['kills'], pD['deaths'], pD['assists'], pD['cs'], pD['trips'], pD['quads'], pD['pents'], pD['bonus']])
-        print player+" : "+pD['team']
-
+        #Hack to add 'team' divider after the support. Not always 100% right but works for now
         if pD['role']=='Support' and i<len( playerDict.keys())-1:
             table.append(["|&nbsp;|"]*14)
         i=i+1
@@ -102,30 +95,32 @@ def generateTable(playHistory,fd):
 def versusGames(teamArray,fd):
     teamA=teamArray[0]
     teamB=teamArray[1]
-
     playHistory=[]
-
+    #Search all games 
     for game in fd['teamStats']:
         teams=[]
         for key in fd['teamStats'][game]:
+            #Create an array of the teams that played in the game
             if 'team' in key:
                 teams.append(key)
         teamNames = []
         for t in teams:
             teamNames.append(fd['teamStats'][game][t]['teamName'].lower())
-            if teamA in teamNames and teamB in teamNames:
-                playHistory.append(game)
+        #If both teams in the team Array add it to the play history
+        if teamA in teamNames and teamB in teamNames:
+            playHistory.append(game)
+    #Returns 0 if no games found. 
     if len(playHistory)==0:
         return 0
-    print playHistory
+    
     return generateTable(playHistory,fd)
 
 
 
 def allGames(names,fd):
+    #Used to find all games for a give player (needs better name)
     playerDict={}
     table=[]
-
     for game in fd['playerStats']:
         print fd['playerStats'][game].keys()
         print fd['teamStats'][game].keys()
@@ -142,7 +137,6 @@ def allGames(names,fd):
  
                 playerId =player['playerId']
                 profile = "[%s](http://lolesports.com/node/%s)" % (name, playerId)
-                
                 
                 for s in ['pentaKills','quadraKills','tripleKills','kills','deaths','assists','minionKills']:
 ##                    Checks for bad game data, usually from unplayed games
@@ -188,11 +182,11 @@ def allGames(names,fd):
                     
     
     if len(playerDict.keys())==0:
-        #return empty if no player found. 0 is used to know to ignore the tourney
+        #return empty if no player found. 0 is used to know to ignore the player
         return (0,{})
     
+    #Generates the table of totals and averages for the players 
     for player in playerDict.keys():
-        
         pD=playerDict[player]['totals']
         c=int(pD['count'])
         table.append([pD['profile'], "%.2f" % pD['points'],pD['count'], pD['kills'], pD['deaths'], pD['assists'], pD['cs'], pD['trips'], pD['quads'], pD['pents'], pD['bonus']])
@@ -203,6 +197,7 @@ def allGames(names,fd):
         table.append(['*Average*', "%s" % pA['points'],'-', pA['kills'], pA['deaths'], pA['assists'], pA['cs'], pA['trips'], pA['quads'], pA['pents'], pA['bonus']])
 
     detailedTables={}
+    #If detailed flag is given generate a detail table for each player
     if detailed:
         for player in playerDict.keys():
             detailedTables[player]=[]
@@ -212,7 +207,7 @@ def allGames(names,fd):
                 if not key=='totals':
                     teamArray=teamArray+playerDict[player][key]['teams']
                     keys.append(key)
-                
+            #Using a list of all teams in all games finds the most common. That one is the team the player is most likely on    
             playerTeam=utils.mostCommon(teamArray)
             teamArray=list(set(teamArray))
             teamArray.remove(playerTeam)
@@ -222,6 +217,7 @@ def allGames(names,fd):
             for x in range(14):
                 div+=':-:|'
             detailedTables[player].append(div)
+            #report the games as vs a team totals, can be reconfigured to report all games individually
             for team in teamArray:
                 tKills=tDeaths=tAssists=tCS=tGames=tTrips=tQuads=tPentas=tBonus=tPoints=0
                 for game in keys:
@@ -233,7 +229,6 @@ def allGames(names,fd):
        
        
                     if vsTeam==team:
-           
                         tKills+=playerGame['kills']
                         tDeaths+=playerGame['deaths']
                         tAssists+=playerGame['assists']
@@ -253,17 +248,14 @@ def allGames(names,fd):
 def findTeamNames(task):
 ##    Searches the comment 'task' for team names
     text=task.body
-    print task
     text=text.replace(constants.BOTNAME+" ",'').replace('\n','').lower()
     teamNames=text.split(' vs ')
-    print teamNames
     teams=utils.cleanTeams(teamNames)
     return teams
 
+
 def findSoloName(task, detailed=False):
     text=task.body
-    print text
-    #text=text[text.find(constants.BOTNAME+" "):]
     if detailed:
         text=text.replace(' detailed ',' ')
     text=text.replace(constants.BOTNAME+" ",'').replace('\n','').lower()
@@ -272,24 +264,27 @@ def findSoloName(task, detailed=False):
     names=utils.cleanNames(names)
     return names
 
+#MAIN PROGRAM
 
 user_agent=("FLCS_pointbot at your service")
 
+#Login to reddit.
 reddit=praw.Reddit(user_agent=user_agent)
 username='FLCS_pointbot'
-reddit.login(username,'xxxxxx')
+reddit.login(username,'xxxxxx')#Like I would share the login password
 
-FLCS=reddit.get_subreddit('FantasyLCS')
+FLCS=reddit.get_subreddit('FantasyLCS')#Choose FantasyLCS as only subreddit for the bot
 
+#Loop for checking comments. Repeats every 300seconds (5 minutes)
 while True:
     pointReport=[]
-    
-    
-
+    # checks each of the past 500 comments for the keyword set at constants.BOTMNAME
     for comment in FLCS.get_comments(limit=500):
       if not str(comment).lower().find(constants.BOTNAME)==-1:
           pointReport.append(comment)
     removeComs=[]
+    
+    #Checks to see if the bot has already responded. If so remove it
     for comment in pointReport:
         #if username in str(comment.author):
         #    removeComs.append(comment)
@@ -297,7 +292,7 @@ while True:
             if username in str(reply.author):
                 removeComs.append(comment)
     
-    
+    #Was getting issues with multi-reply comments being removed multiple times causing errors. This can be cleaned up by sets
     for rC in removeComs:
         try:
             pointReport.remove(rC)
@@ -305,11 +300,13 @@ while True:
             print "%s already removed"%rC
 
     if len(pointReport)>0:
+        #Only loads json data if there is a new comment. Prevents loading the data every 5 minuts unless neeeded
         text=requests.get('http://na.lolesports.com/api/gameStatsFantasy.json?tournamentId=%s'%constants.REGION["NA"]).text
         NA_DICT=json.loads(text,object_pairs_hook=collections.OrderedDict)
         text=requests.get('http://na.lolesports.com/api/gameStatsFantasy.json?tournamentId=%s'%constants.REGION["EU"]).text
         EU_DICT=json.loads(text,object_pairs_hook=collections.OrderedDict)
     
+    #Runs through all the comments that haven't already been proccessed
     for comment in pointReport:
         detailed=False
         if not str(comment).find(' vs ')==-1:
@@ -338,8 +335,7 @@ while True:
             
             
             namesFull=findSoloName(comment,detailed)
-            print namesFull
-                
+            #handles multiple player requests. Limits 10 for regualr data, 3 for detailed data. (Doesn't matter if player isn't found)
             if detailed:
                 maxLength=3
             length=int(len(namesFull)/maxLength)+1
@@ -352,15 +348,16 @@ while True:
                 name10array.append(name)
             if len(name10array)>0:
                 nameArray.append(name10array)
-            print nameArray
-                
             
+                
+            #finds data for each name
             for names in nameArray:
                 naTable,naDT=allGames(names,NA_DICT)
                 euTable,euDT=allGames(names,EU_DICT)
                 allDT=dict(euDT.items()+naDT.items())
                 
                 table=[]
+                #as long as one game is found for the player
                 if not (naTable==0 and euTable == 0):
                 
                     post=""
@@ -375,10 +372,7 @@ while True:
                         post+="%s  "%name.upper()
                     post += "    \n\n"
                     post+=buildRedditTable(constants.PLAYER_TABLE_COLUMNS,table)
-                
                     post+='\n'
-                    
-                    
                     
                     for key in allDT:
                         
@@ -386,15 +380,14 @@ while True:
                             post+=line
                             post+='  \n'
                         post+='\n'
-
                     comment.reply(post)
                     time.sleep(1)
+                    
                 else:
                     post='No Games found for '
                     for name in names:
                         post=post+name
                     comment.reply(post)
-                    print post
                     time.sleep(1)
                 
 
