@@ -1,5 +1,7 @@
 #GLOBALS
 #--------------------------
+
+#Dict to adjust input team names to match API data
 CORRECTION_DICT = {
     'clg':'counter logic gaming',
     'c9':'cloud9 ',
@@ -25,6 +27,7 @@ CORRECTION_DICT = {
     'gambit':'gambit gaming'
     }
 
+#Dict to adjust input player names to match API data
 PLAYER_CORRECTION_DICT ={
     'tabbz':'tabzz',
     'zionspartan':'zion spartan',
@@ -36,9 +39,11 @@ BOTNAME='pointbot' #Comment call to look for
 
 REGION= {'NA':'104','EU':'102'} #Region Codes
 
-#Table Titles
+#Table Titles for vs
 PLAYER_TABLE_COLUMNS_TEAM = [ 'Player', 'Points','Games','Points/Game', '&nbsp;'*4, 'K^^[+2]', 'D^^[-0.5]', 'A^^[+1.5]', 'CS^^[+0.01]',
                          '&nbsp;'*4, 'Trips^^[+2]', 'Quads^^[+5]', 'Pents^^[+10]', 'K/A Bonus^^[+2]' ]
+
+#Table Titles for individual players
 PLAYER_TABLE_COLUMNS = [ 'Player', 'Points','Games','&nbsp;'*4, 'K^^[+2]', 'D^^[-0.5]', 'A^^[+1.5]', 'CS^^[+0.01]',
                          '&nbsp;'*4, 'Trips^^[+2]', 'Quads^^[+5]', 'Pents^^[+10]', 'K/A Bonus^^[+2]' ]
 
