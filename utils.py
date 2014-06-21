@@ -10,6 +10,7 @@ def cleanNames(nameArray):
         count=count+1
     return nameArray
 
+#--------------
 def cleanTeams(teamArray):
     #checks names against the global correction to fix any shorthand
     count=0
@@ -19,6 +20,7 @@ def cleanTeams(teamArray):
         count=count+1
     return teamArray
 
+#--------------
 def calculatePlayerPoints(player_json):
     #Calculates Points 
     for s in ['pentaKills','quadraKills','tripleKills','kills','deaths','assists','minionKills']:
@@ -30,7 +32,7 @@ def calculatePlayerPoints(player_json):
     points += 1.5 * int(player_json['assists'])
 
     points += 0.01 * int(player_json['minionKills'])
-
+    # Hack to save from canceling out points from quadras and pentas
     points += 2 * int(player_json['tripleKills'])
     points += 3 * int(player_json['quadraKills'])
     points += 5 * int(player_json['pentaKills'])
@@ -39,8 +41,9 @@ def calculatePlayerPoints(player_json):
         points += 2
     return points
 
+#--------------
 def mostCommon(wordList):
-    #Finds most common item in an array
+    #Finds most common item in an array, couldnt get the collections to do this like I planned
     word_counter={}
     for word in wordList:
         if word in word_counter:
